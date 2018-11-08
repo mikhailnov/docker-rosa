@@ -5,17 +5,24 @@
 # Based on mkimage-urpmi.sh (https://github.com/juanluisbaptiste/docker-brew-mageia)
 #
 
-rosaVersion="rosa2016.1"
-rootfsDir="./rootfsDir" 
-basePackages="basesystem-minimal urpmi locales locales-en git-core abf htop"
-mirror="--mirrorlist http://abf-downloads.rosalinux.ru/${rosaVersion}/repository/x86_64/"
-tarFile="./rootfs-${rosaVersion}_$(date +%Y-%M-%d).tar.xz"
+#TIME="${TIME:-5}"
+arch="${arch:-x86_64}"
+rosaVersion="${rosaVersion:-rosa2016.1}"
+rootfsDir="${rootfsDir:-./BUILD_rootfs}" 
+outDir="${outDir:-"."}"
+# branding-configs-fresh, rpm-build have problems with dependencies, so let's install them in chroot
+basePackages="${basePackages:-basesystem-minimal bash urpmi locales locales-en git-core abf htop xz iputils iproute2 nano squashfs-tools tar}"
+chrootPackages="${chrootPackages:-branding-configs-fresh rpm-build}"
+mirror="${mirror:-http://abf-downloads.rosalinux.ru/${rosaVersion}/repository/${arch}/}"
+outName="${outName:-"rootfs-${rosaVersion}_${arch}_$(date +%Y-%M-%d)"}"
+tarFile="${outDir}/${outName}.tar.xz"
+sqfsFile="${outDir}/${outName}.sqfs"
 
 (
         urpmi.addmedia --distrib \
-                $mirror \
+                --mirrorlist "$mirror" \
                 --urpmi-root "$rootfsDir"
-        urpmi $basePackages \
+        urpmi ${basePackages} \
                 --auto \
                 --no-suggests \
                 --urpmi-root "$rootfsDir" \
@@ -28,8 +35,6 @@ tarFile="./rootfs-${rosaVersion}_$(date +%Y-%M-%d).tar.xz"
 	#  urpmi cache
 	rm -rf var/cache/urpmi
 	mkdir -p --mode=0755 var/cache/urpmi
-	#  ldconfig
-	#rm -rf sbin/ldconfig
 	rm -rf etc/ld.so.cache var/cache/ldconfig
 	mkdir -p --mode=0755 var/cache/ldconfig
  popd
@@ -45,13 +50,18 @@ nameserver 77.88.8.8
 nameserver 8.8.4.4
 nameserver 77.88.8.1
 EOF
-    
+
+# Those packages, installation of which fails when they are listed in $basePackages, are installed in chroot
+chroot "$rootfsDir" /bin/sh -c "urpmi ${chrootPackages} --auto"
+
 touch "$tarFile"
 
 (
         set -x
-        tar --numeric-owner -caf "$tarFile" -C "$rootfsDir" --transform='s,^./,,' .
+        tar --numeric-owner -cf - "$rootfsDir" --transform='s,^./,,' | xz --compress -9 --threads=0 - > "$tarFile"
         ln -s "$tarFile" "./rootfs.tar.xz"
+        mksquashfs "$rootfsDir" "$sqfsFile" -comp xz
+        
 )
 
 ( set -x; rm -rf "$rootfsDir" )
