@@ -1,5 +1,12 @@
 # Docker Rosa Linux Image
 
+Install
+
+    1. mkdir -p build
+    2. cd build
+    3. git clone https://github.com/SergeyDjam/docker-rosa.git
+    4. cd docker-rosa
+    5. sudo ./mkimage-urpmi.sh
 
 Run docker container:
     
