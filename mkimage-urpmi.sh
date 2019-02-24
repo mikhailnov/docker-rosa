@@ -13,6 +13,7 @@ if [ "$(id -u)" != "0" ]; then
 fi
 
 arch="${arch:-x86_64}"
+imgType="${imgType:-std}"
 rosaVersion="${rosaVersion:-rosa2016.1}"
 rootfsDir="${rootfsDir:-./BUILD_rootfs}" 
 outDir="${outDir:-"."}"
@@ -20,7 +21,7 @@ outDir="${outDir:-"."}"
 basePackages="${basePackages:-basesystem-minimal bash urpmi}"
 chrootPackages="${chrootPackages:-systemd initscripts termcap dhcp-client locales locales-en git-core htop iputils iproute2 nano squashfs-tools tar timezone passwd branding-configs-fresh rpm-build}"
 mirror="${mirror:-http://mirror.yandex.ru/rosa/${rosaVersion}/repository/${arch}/}"
-outName="${outName:-"rootfs-${rosaVersion}_${arch}_$(date +%Y-%m-%d)"}"
+outName="${outName:-"rootfs-${imgType}-${rosaVersion}_${arch}_$(date +%Y-%m-%d)"}"
 tarFile="${outDir}/${outName}.tar.xz"
 sqfsFile="${outDir}/${outName}.sqfs"
 
