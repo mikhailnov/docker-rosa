@@ -7,7 +7,11 @@
 
 set -efu
 
-#TIME="${TIME:-5}"
+if [ "$(id -u)" != "0" ]; then
+	echo "Please run as root. Example: sudo ./mkimage-urpmi.sh"
+	exit 1
+fi
+
 arch="${arch:-x86_64}"
 rosaVersion="${rosaVersion:-rosa2016.1}"
 rootfsDir="${rootfsDir:-./BUILD_rootfs}" 
@@ -28,7 +32,8 @@ sqfsFile="${outDir}/${outName}.sqfs"
                 --auto \
                 --no-suggests \
                 --urpmi-root "$rootfsDir" \
-                --root "$rootfsDir"
+                --root "$rootfsDir" \
+                --clean
 )
 
   pushd "$rootfsDir"
@@ -53,7 +58,7 @@ EOF
 # Those packages, installation of which fails when they are listed in $basePackages, are installed in chroot
 # Fix SSL in chroot (/dev/urandom is needed)
 mount --bind -v /dev "${rootfsDir}/dev"
-chroot "$rootfsDir" /bin/sh -c "urpmi ${chrootPackages} --auto --no-suggests"
+chroot "$rootfsDir" /bin/sh -c "urpmi ${chrootPackages} --auto --no-suggests --clean"
 
 # Try to configure root shell
 # package 'initscripts' contains important scripts from /etc/profile.d/
@@ -85,7 +90,9 @@ touch "$tarFile"
 
 (
         set -x
-        tar --numeric-owner -cf - "$rootfsDir" --transform='s,^./,,' | xz --compress -9 --threads=0 - > "$tarFile"
+        pushd "$rootfsDir"
+			tar --numeric-owner -c -f "../${tarFile}" --xz --transform='s,^./,,' .
+        popd
         ln -s "$tarFile" "./rootfs.tar.xz" || :
         mksquashfs "$rootfsDir" "$sqfsFile" -comp xz
         
