@@ -91,7 +91,8 @@ touch "$tarFile"
 (
         set -x
         pushd "$rootfsDir"
-			tar --numeric-owner -c -f "../${tarFile}" --xz --transform='s,^./,,' .
+			env XZ_OPT="-9 --threads=0 -v" \
+			tar cJf "../${tarFile}" --numeric-owner --transform='s,^./,,' .
         popd
         ln -s "$tarFile" "./rootfs.tar.xz" || :
         mksquashfs "$rootfsDir" "$sqfsFile" -comp xz
