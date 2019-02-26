@@ -22,6 +22,7 @@ mirror="${mirror:-http://mirror.yandex.ru/rosa/${rosaVersion}/repository/${arch}
 outName="${outName:-"rootfs-${imgType}-${rosaVersion}_${arch}_$(date +%Y-%m-%d)"}"
 tarFile="${outDir}/${outName}.tar.xz"
 sqfsFile="${outDir}/${outName}.sqfs"
+systemd_networkd="${systemd_networkd:-1}"
 
 urpmi.addmedia --distrib \
 	--mirrorlist "$mirror" \
@@ -103,12 +104,16 @@ done
 # systemd-networkd makes basic network configuration automatically
 # After it, you can either make /etc/systemd/network/*.conf or
 # `systemctl enable dhclient@eth0`, where eth0 is your network interface from `ip a`
-chroot "$rootfsDir" /bin/sh -c "systemctl enable systemd-networkd"
+if [ "$systemd_networkd" != 0 ]; then
+	chroot "$rootfsDir" /bin/sh -c "systemctl enable systemd-networkd"
+fi
 
 # disable pam_securetty to allow logging in as root via `systemd-nspawn -b`
 # https://bugzilla.rosalinux.ru/show_bug.cgi?id=9631
 # https://github.com/systemd/systemd/issues/852
-sed -e '/pam_securetty.so/d' -i "${rootfsDir}/etc/pam.d/login"
+if grep -q 'pam_securetty.so' "${rootfsDir}/etc/pam.d/login"; then
+	sed -e '/pam_securetty.so/d' -i "${rootfsDir}/etc/pam.d/login"
+fi
 
 touch "$tarFile"
 
