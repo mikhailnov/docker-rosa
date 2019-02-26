@@ -17,25 +17,48 @@ imgType="${imgType:-std}"
 rosaVersion="${rosaVersion:-rosa2016.1}"
 rootfsDir="${rootfsDir:-./BUILD_rootfs}" 
 outDir="${outDir:-"."}"
-# branding-configs-fresh, rpm-build have problems with dependencies, so let's install them in chroot
-basePackages="${basePackages:-basesystem-minimal bash urpmi}"
-chrootPackages="${chrootPackages:-systemd initscripts termcap dhcp-client locales locales-en git-core htop iputils iproute2 nano squashfs-tools tar timezone passwd branding-configs-fresh rpm-build}"
+packagesList="${packagesList:-basesystem-minimal bash urpmi systemd initscripts termcap dhcp-client locales locales-en git-core htop iputils iproute2 nano squashfs-tools tar timezone passwd branding-configs-fresh rpm-build}"
 mirror="${mirror:-http://mirror.yandex.ru/rosa/${rosaVersion}/repository/${arch}/}"
 outName="${outName:-"rootfs-${imgType}-${rosaVersion}_${arch}_$(date +%Y-%m-%d)"}"
 tarFile="${outDir}/${outName}.tar.xz"
 sqfsFile="${outDir}/${outName}.sqfs"
 
-(
-        urpmi.addmedia --distrib \
-                --mirrorlist "$mirror" \
-                --urpmi-root "$rootfsDir"
-        urpmi ${basePackages} \
-                --auto \
-                --no-suggests \
-                --urpmi-root "$rootfsDir" \
-                --root "$rootfsDir" \
-                --clean
-)
+urpmi.addmedia --distrib \
+	--mirrorlist "$mirror" \
+	--urpmi-root "$rootfsDir"
+
+#########################################################
+# try to workaround urpmi bug due to which it randomly
+# can't resolve dependencies during bootstrap
+urpmi_bootstrap(){
+	for urpmi_options in \
+		"--auto --no-suggests --allow-force --allow-nodeps --ignore-missing" \
+		"--auto --no-suggests"
+	do
+		urpmi --urpmi-root "$rootfsDir" \
+			${urpmi_options} \
+			${packagesList}
+		urpmi_return_code="$?"
+	done
+}
+# temporarily don't fail the whole scripts when not last iteration of urpmi fails
+set +e
+for i in $(seq 1 10)
+do
+	urpmi_bootstrap
+	if [ "${urpmi_return_code}" = 0 ]; then
+		echo "urpmi iteration #${i} was successfull."
+		break
+	fi
+done
+# now check the return code of the _last_ urpmi iteration
+if [ "${urpmi_return_code}" != 0 ]; then
+	echo "urpmi bootstrapping failed!"
+	exit 1
+fi
+# return failing the whole script on any error
+set -e
+#########################################################
 
   pushd "$rootfsDir"
   
@@ -56,10 +79,10 @@ nameserver 8.8.4.4
 nameserver 77.88.8.1
 EOF
 
-# Those packages, installation of which fails when they are listed in $basePackages, are installed in chroot
 # Fix SSL in chroot (/dev/urandom is needed)
 mount --bind -v /dev "${rootfsDir}/dev"
-chroot "$rootfsDir" /bin/sh -c "urpmi ${chrootPackages} --auto --no-suggests --clean"
+# Let's make sure that all packages have been installed
+chroot "$rootfsDir" /bin/sh -c "urpmi ${packagesList} --auto --no-suggests --clean"
 
 # Try to configure root shell
 # package 'initscripts' contains important scripts from /etc/profile.d/
