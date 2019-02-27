@@ -21,5 +21,5 @@ if [ "$(rpm -q --qf="%{VERSION}" urpmi | sed -e 's,\.,,g')" -ge 8035 ] && \
 	else echo "urpmi is not >= 8.03.5, error!"; exit 1
 fi
 
-
+urpmi squashfs-tools --auto
 ./build-all.sh
