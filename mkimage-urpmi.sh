@@ -20,8 +20,8 @@ outDir="${outDir:-"."}"
 packagesList="${packagesList:-basesystem-minimal bash urpmi systemd initscripts termcap dhcp-client locales locales-en git-core htop iputils iproute2 nano squashfs-tools tar timezone passwd branding-configs-fresh rpm-build}"
 mirror="${mirror:-http://mirror.yandex.ru/rosa/${rosaVersion}/repository/${arch}/}"
 outName="${outName:-"rootfs-${imgType}-${rosaVersion}_${arch}_$(date +%Y-%m-%d)"}"
-tarFile="${outDir}/${outName}.tar.xz"
-sqfsFile="${outDir}/${outName}.sqfs"
+tarFile="${outName}.tar.xz"
+sqfsFile="${outName}.sqfs"
 systemd_networkd="${systemd_networkd:-1}"
 
 urpmi.addmedia --distrib \
@@ -115,16 +115,16 @@ if grep -q 'pam_securetty.so' "${rootfsDir}/etc/pam.d/login"; then
 	sed -e '/pam_securetty.so/d' -i "${rootfsDir}/etc/pam.d/login"
 fi
 
-touch "$tarFile"
+touch "${outDir}/${tarFile}"
 
 (
         set -x
         pushd "$rootfsDir"
 			env XZ_OPT="-9 --threads=0 -v" \
-			tar cJf "../${tarFile}" --numeric-owner --transform='s,^./,,' .
+			tar cJf "${outDir}/${tarFile}" --numeric-owner --transform='s,^./,,' .
         popd
         ln -s "$tarFile" "./rootfs.tar.xz" || :
-        mksquashfs "$rootfsDir" "$sqfsFile" -comp xz
+        mksquashfs "$rootfsDir" "${outDir}/${sqfsFile}" -comp xz
         
 )
 
