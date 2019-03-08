@@ -4,5 +4,5 @@
 export outDir="/home/vagrant/results"
 [ ! -d "$outDir" ] && mkdir -p "$outDir"
 
-urpmi squashfs-tools --auto
+urpmi coreutils findutils sed tar urpmi util-linux squashfs-tools --auto
 ./build-all.sh
