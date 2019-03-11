@@ -18,6 +18,7 @@ rosaVersion="${rosaVersion:-rosa2016.1}"
 rootfsDir="${rootfsDir:-./BUILD_rootfs}" 
 outDir="${outDir:-"."}"
 packagesList="${packagesList:-basesystem-minimal bash urpmi systemd initscripts termcap dhcp-client locales locales-en git-core htop iputils iproute2 nano squashfs-tools tar timezone passwd branding-configs-fresh rpm-build}"
+addPackages="${addPackages:-""}"
 if [ -n "$addPackages" ]; then packagesList="${packagesList} ${addPackages}"; fi
 mirror="${mirror:-http://mirror.yandex.ru/rosa/${rosaVersion}/repository/${arch}/}"
 outName="${outName:-"rootfs-${imgType}-${rosaVersion}_${arch}_$(date +%Y-%m-%d)"}"
