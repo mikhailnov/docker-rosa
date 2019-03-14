@@ -5,4 +5,8 @@ export outDir="/home/vagrant/results"
 [ ! -d "$outDir" ] && mkdir -p "$outDir"
 
 urpmi coreutils findutils sed tar urpmi util-linux squashfs-tools xz --auto
-./build-all.sh
+
+if [ "$BUILD_MAIN_IMAGE_ONLY" = 1 ]
+	then ./mkimage-urpmi.sh
+	else ./build-all.sh
+fi
