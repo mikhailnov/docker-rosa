@@ -1,6 +1,7 @@
-# Docker Rosa Linux Image
+# ROSA rootfs images
 
+Daily builds: [https://abf.io/platforms/rosa2016.1/products/224](https://abf.io/platforms/rosa2016.1/products/224)
 
-Run docker container:
+More information: [http://wiki.rosalab.ru/ru/index.php/Образ_rootfs](http://wiki.rosalab.ru/ru/index.php/Образ_rootfs)
 
-    docker run -ti --rm --name rosa sibsau/rosa:latest /bin/bash
+To build locally, run `./mkimage-urpmi.sh`
