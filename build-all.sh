@@ -16,8 +16,9 @@ do
 		env rosaVersion="$rosaVersion" ./mkimage-minimal-2012.sh
 	done
 	
-	# build standard images only of rosa2016.1
+	# build standard images only of rosa2016.1 and rosa2019.1
 	unset packagesList
 	env rosaVersion="rosa2016.1" type="std" systemd_networkd=1 ./mkimage-urpmi.sh
 	env rosaVersion="rosa2019.1" mirror="http://abf-downloads.rosalinux.ru/" type="std" systemd_networkd=1 ./mkimage-urpmi.sh
+	env rosaVersion="rosa2019.0" mirror="http://abf-downloads.rosalinux.ru/" type="min" systemd_networkd=1 ./mkimage-urpmi.sh
 done
