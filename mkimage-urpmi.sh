@@ -28,6 +28,12 @@ outName="${outName:-"rootfs-${imgType}-${rosaVersion}_${arch}_$(date +%Y-%m-%d)"
 tarFile="${outName}.tar.xz"
 sqfsFile="${outName}.sqfs"
 systemd_networkd="${systemd_networkd:-1}"
+clean_rootfsDir="${clean_rootfsDir:-1}"
+
+# Ensure that rootfsDir from previous build will not be reused
+if [ "$clean_rootfsDir" = 1 ]; then
+	rm -fr "$rootfsDir"
+fi
 
 urpmi.addmedia --distrib \
 	--mirrorlist "$repo" \
