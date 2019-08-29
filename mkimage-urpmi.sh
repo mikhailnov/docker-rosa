@@ -28,6 +28,8 @@ rootfsDir="${rootfsDir:-./BUILD_${outName}}"
 tarFile="${outName}.tar.xz"
 sqfsFile="${outName}.sqfs"
 systemd_networkd="${systemd_networkd:-1}"
+rootfsPackTarball="${rootfsPackTarball:-1}"
+rootfsPackSquash="${rootfsPackSquash:-1}"
 clean_rootfsDir="${clean_rootfsDir:-1}"
 
 # Ensure that rootfsDir from previous build will not be reused
@@ -126,15 +128,15 @@ if grep -q 'pam_securetty.so' "${rootfsDir}/etc/pam.d/login"; then
 	sed -e '/pam_securetty.so/d' -i "${rootfsDir}/etc/pam.d/login"
 fi
 
-touch "${outDir}/${tarFile}"
+( set -x
+if [ "$rootfsPackTarball" != 0 ]; then
+	env XZ_OPT="-9 --threads=0 -v" \
+		tar cJf "${outDir}/${tarFile}" --numeric-owner --transform='s,^./,,' --directory="$rootfsDir" .
+	ln -sf "$tarFile" "./rootfs.tar.xz" || :
+fi
+if [ "$rootfsPackSquash" != 0 ]; then
+	mksquashfs "$rootfsDir" "${outDir}/${sqfsFile}" -comp xz
+fi
 
-(
-        set -x
-        env XZ_OPT="-9 --threads=0 -v" \
-			tar cJf "${outDir}/${tarFile}" --numeric-owner --transform='s,^./,,' --directory="$rootfsDir" .
-        ln -sf "$tarFile" "./rootfs.tar.xz" || :
-        mksquashfs "$rootfsDir" "${outDir}/${sqfsFile}" -comp xz
-        
+rm -rf "$rootfsDir"
 )
-
-( set -x; rm -rf "$rootfsDir" )
