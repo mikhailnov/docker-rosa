@@ -30,6 +30,7 @@ sqfsFile="${outName}.sqfs"
 systemd_networkd="${systemd_networkd:-1}"
 rootfsPackTarball="${rootfsPackTarball:-1}"
 rootfsPackSquash="${rootfsPackSquash:-1}"
+rootfsXzCompressLevel="${rootfsXzCompressLevel:-9}"
 clean_rootfsDir="${clean_rootfsDir:-1}"
 
 # Ensure that rootfsDir from previous build will not be reused
@@ -131,7 +132,7 @@ fi
 
 ( set -x
 if [ "$rootfsPackTarball" != 0 ]; then
-	env XZ_OPT="-9 --threads=0 -v" \
+	env XZ_OPT="-${rootfsXzCompressLevel} --threads=0 -v" \
 		tar cJf "${outDir}/${tarFile}" --numeric-owner --transform='s,^./,,' --directory="$rootfsDir" .
 	ln -sf "$tarFile" "./rootfs.tar.xz" || :
 fi
