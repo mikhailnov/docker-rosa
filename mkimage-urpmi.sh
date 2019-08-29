@@ -34,6 +34,7 @@ clean_rootfsDir="${clean_rootfsDir:-1}"
 
 # Ensure that rootfsDir from previous build will not be reused
 if [ "$clean_rootfsDir" = 1 ]; then
+	umount "${rootfsDir}/dev" || :
 	rm -fr "$rootfsDir"
 fi
 
@@ -94,7 +95,7 @@ nameserver 77.88.8.1
 EOF
 
 # Fix SSL in chroot (/dev/urandom is needed)
-mount --bind -v /dev "${rootfsDir}/dev"
+mount --bind -v -o ro /dev "${rootfsDir}/dev"
 # Let's make sure that all packages have been installed
 chroot "$rootfsDir" /bin/sh -c "urpmi ${packagesList} --auto --no-suggests --clean"
 
