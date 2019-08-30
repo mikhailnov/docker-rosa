@@ -32,6 +32,8 @@ rootfsPackTarball="${rootfsPackTarball:-1}"
 rootfsPackSquash="${rootfsPackSquash:-1}"
 rootfsXzCompressLevel="${rootfsXzCompressLevel:-6}"
 rootfsXzThreads="${rootfsXzThreads:-0}"
+rootfsSquashCompressAlgo="${rootfsSquashCompressAlgo:-xz}"
+rootfsSquashBlockSize="${rootfsSquashBlockSize:-512K}"
 clean_rootfsDir="${clean_rootfsDir:-1}"
 
 # Ensure that rootfsDir from previous build will not be reused
@@ -138,7 +140,7 @@ if [ "$rootfsPackTarball" != 0 ]; then
 	ln -sf "$tarFile" "./rootfs.tar.xz" || :
 fi
 if [ "$rootfsPackSquash" != 0 ]; then
-	mksquashfs "$rootfsDir" "${outDir}/${sqfsFile}" -comp xz
+	mksquashfs "$rootfsDir" "${outDir}/${sqfsFile}" -comp "$rootfsSquashCompressAlgo" -b "$rootfsSquashBlockSize"
 fi
 
 rm -rf "$rootfsDir"
