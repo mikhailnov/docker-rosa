@@ -18,6 +18,8 @@ rosaVersion="${rosaVersion:-rosa2016.1}"
 outDir="${outDir:-"."}"
 packagesList="${packagesList:-basesystem-minimal bash urpmi systemd initscripts termcap ncurses dhcp-client locales locales-en locales-ru git-core htop iputils iproute2 nano squashfs-tools tar timezone passwd rpm-build sudo fonts-ttf-freefont}"
 addPackages="${addPackages:-""}"
+# Example: addRepos="repoName1;http://repo.url/ repoName2;http://repo.url/"
+addRepos="${addRepos:-""}"
 brandingPackages="${brandingPackages:-branding-configs-fresh}"
 if [ -n "$addPackages" ]; then packagesList="${packagesList} ${addPackages}"; fi
 if [ -n "$brandingPackages" ]; then packagesList="${packagesList} ${brandingPackages}"; fi
@@ -45,6 +47,22 @@ fi
 urpmi.addmedia --distrib \
 	--mirrorlist "$repo" \
 	--urpmi-root "$rootfsDir"
+
+if [ -n "$addRepos" ]; then
+	while read -r line
+	do
+		repoName="$(echo "$line" | awk -F ';' '{print $1}')"
+		repoUrl="$(echo "$line" | awk -F ';' '{print $2}')"
+		if [ -z "$repoName" ] || [ -z "$repoUrl" ]; then
+			echo "Incorrect repository line ${line}, use a correct form: repoName;http://repo.url/"
+			return 1
+		fi
+		urpmi.addmedia \
+			--urpmi-root "$rootfsDir" \
+			"$repoName" "$repoUrl"
+		unset repoName repoUrl
+	done <<< "$(echo "$addRepos" | tr ' ' '\n')"
+fi
 
 #########################################################
 # try to workaround urpmi bug due to which it randomly
