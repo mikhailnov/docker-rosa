@@ -30,7 +30,7 @@ sqfsFile="${outName}.sqfs"
 systemd_networkd="${systemd_networkd:-1}"
 rootfsPackTarball="${rootfsPackTarball:-1}"
 rootfsPackSquash="${rootfsPackSquash:-1}"
-rootfsXzCompressLevel="${rootfsXzCompressLevel:-9}"
+rootfsXzCompressLevel="${rootfsXzCompressLevel:-6}"
 rootfsXzThreads="${rootfsXzThreads:-0}"
 clean_rootfsDir="${clean_rootfsDir:-1}"
 

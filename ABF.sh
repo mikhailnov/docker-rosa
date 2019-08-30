@@ -2,6 +2,7 @@
 # Build these images on ABF
 
 export outDir="/home/vagrant/results"
+export rootfsXzCompressLevel=9
 [ ! -d "$outDir" ] && mkdir -p "$outDir"
 
 urpmi coreutils findutils sed tar urpmi util-linux squashfs-tools xz --auto
