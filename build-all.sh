@@ -10,7 +10,7 @@ _current_build(){
 }
 
 # build minimal images
-for arch in i586 x86_64
+for arch in x86_64 i586
 do
 	export arch="$arch"
 	
