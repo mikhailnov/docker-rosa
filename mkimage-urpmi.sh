@@ -129,7 +129,8 @@ if [ ! -d "${rootfsDir}/root" ]; then mkdir -p "${rootfsDir}/root"; fi
 while read -r line
 do
 	cp -vp "${rootfsDir}/${line}" "${rootfsDir}/root/"
-done < <(chroot "$rootfsDir" /bin/sh -c 'rpm -ql bash | grep ^/etc/skel')
+# `rpm -ql` of RPM 5 deadlocks sometimes...
+done < <(chroot "$rootfsDir" /bin/sh -c 'timeout --signal=9 5 rpm -ql bash | grep ^/etc/skel')
 
 # clean-up
 for i in dev sys proc; do
