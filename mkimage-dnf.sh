@@ -136,4 +136,5 @@ EOF
 	)
 }
 
+trap 'rm -f "$dnf_conf_tmp"' EXIT
 _main
