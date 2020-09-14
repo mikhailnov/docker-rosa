@@ -11,15 +11,29 @@ arch="${arch:-x86_64}"
 imgType="${imgType:-std}"
 rosaVersion="${rosaVersion:-rosa2019.1}"
 outDir="${outDir:-"."}"
-packagesList="${packagesList:-basesystem-minimal rosa-repos rosa-repos-contrib dnf bash systemd termcap ncurses dhcp-client locales locales-ru htop iputils iproute2 nano tar timezone passwd sudo fonts-ttf-freefont}"
+packagesList="${packagesList:-basesystem-minimal rosa-repos dnf bash systemd termcap ncurses dhcp-client locales locales-ru htop iputils iproute2 nano tar timezone passwd sudo fonts-ttf-freefont}"
 addPackages="${addPackages:-""}"
 # Example: addRepos="repoName1;http://repo.url/ repoName2;http://repo.url/"
 #addRepos="${addRepos:-""}"
 brandingPackages="${brandingPackages:-distro-release}"
 if [ -n "$addPackages" ]; then packagesList="${packagesList} ${addPackages}"; fi
 if [ -n "$brandingPackages" ]; then packagesList="${packagesList} ${brandingPackages}"; fi
-mirror="${mirror:-http://abf-downloads.rosalinux.ru}"
+# auth token, example: xxx@ -> http://xxx@abf-downloads.rosalinux.ru
+repokey="${repokey:-""}"
+if [ "$rosaVersion" = "rosa2019.05" ] && [ -z "$repokey" ] ; then
+	# $TOKEN is set by abf
+	repokey="${TOKEN}@"
+fi
+mirror="${mirror:-http://${repokey}abf-downloads.rosalinux.ru}"
 repo="${repo:-${mirror}/${rosaVersion}/repository/${arch}/}"
+enableContrib="${enableContrib:-1}"
+if [ "$rosaVersion" = "rosa2019.05" ]; then
+	# There is no contrib in certified distros
+	enableContrib=0
+fi
+if [ "$enableContrib" -gt 0 ] && [[ "$packagesList" =~ .*rosa-repos.* ]] ; then
+	packagesList="${packagesList} rosa-repos-contrib"
+fi
 outName="${outName:-"rootfs-${imgType}-${rosaVersion}_${arch}_$(date +%Y-%m-%d)"}"
 rootfsDir="${rootfsDir:-./BUILD_${outName}}"
 tarFile="${outName}.tar.xz"
@@ -51,30 +65,34 @@ install_weak_deps=0
 metadata_expire=60s
 best=1
 
-[rosa2019.1_main_release]
-name=rosa2019.1_main_release
+[${rosaVersion}_main_release]
+name=${rosaVersion}_main_release
 baseurl=${repo}/main/release
 gpgcheck=0
 enabled=1
 
-[rosa2019.1_main_updates]
-name=rosa2019.1_main_updates
+[${rosaVersion}_main_updates]
+name=${rosaVersion}_main_updates
 baseurl=${repo}/main/updates
 gpgcheck=0
 enabled=1
+EOF
 
-[rosa2019.1_contrib_release]
-name=rosa2019.1_contrib_release
+	if [ "$enableContrib" -gt 0 ]; then
+		cat << EOF >> "$dnf_conf_tmp"
+[${rosaVersion}_contrib_release]
+name=${rosaVersion}_contrib_release
 baseurl=${repo}/contrib/release
 gpgcheck=0
 enabled=1
 
-[rosa2019.1_contrib_updates]
-name=rosa2019.1_contrib_updates
+[${rosaVersion}_contrib_updates]
+name=${rosaVersion}_contrib_updates
 baseurl=${repo}/contrib/updates
 gpgcheck=0
 enabled=1
 EOF
+	fi
 
 	mkdir -p "$rootfsDir"
 	if [ -d "./${rootfsDir}" ]
