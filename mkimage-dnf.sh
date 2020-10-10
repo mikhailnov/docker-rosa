@@ -132,6 +132,9 @@ EOF
 		chroot "$rootfsDir" /bin/sh -c "systemctl mask network.service"
 	fi
 
+	# make root login without password out of the box
+	chroot "$rootfsDir" /bin/sh -c "passwd -d root"
+
 	# disable pam_securetty to allow logging in as root via `systemd-nspawn -b`
 	# https://bugzilla.rosalinux.ru/show_bug.cgi?id=9631
 	# https://github.com/systemd/systemd/issues/852
