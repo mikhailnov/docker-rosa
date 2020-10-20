@@ -108,7 +108,7 @@ EOF
 	fi
 				
 		
-	dnf --config "$dnf_conf_tmp" --releasever "$rosaVersion" --installroot "$dnf_rootfsDir" install ${packagesList}
+	dnf --config "$dnf_conf_tmp" --releasever "$rosaVersion" --installroot "$dnf_rootfsDir" --forcearch="$arch" install ${packagesList}
 	rm -fr "${rootfsDir}/var/cache/dnf"
 	# allow to exclude bash from list of packages
 	if [ -x "${rootfsDir}/bin/bash" ]; then
