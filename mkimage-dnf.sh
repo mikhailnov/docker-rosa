@@ -34,16 +34,6 @@ fi
 if [ "$enableContrib" -gt 0 ] && [[ "$packagesList" =~ .*rosa-repos.* ]] ; then
 	packagesList="${packagesList} rosa-repos-contrib"
 fi
-# Allow to run this rootfs on CPU of another hardware architecture
-# binfmt must be configured to use /usr/bin/qemu-${qemu_user_arch}-static as an interpreter
-qemu_user="${qemu_user:-1}"
-case "$arch" in
-	i686 | i586 ) qemu_user_arch="i386" ;;
-	* ) qemu_user_arch="$arch" ;;
-esac
-if [ "$qemu_user" -gt 0 ]; then
-	packagesList="${packagesList} /usr/bin/qemu-${qemu_user_arch}-static"
-fi
 outName="${outName:-"rootfs-${imgType}-${rosaVersion}_${arch}_$(date +%Y-%m-%d)"}"
 rootfsDir="${rootfsDir:-./BUILD_${outName}}"
 tarFile="${outName}.tar.xz"
