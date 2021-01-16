@@ -153,6 +153,10 @@ EOF
 		sed -e '/pam_securetty.so/d' -i "${rootfsDir}/etc/pam.d/login"
 	fi
 
+	if [ "$workaroundSystemd18276" != 0 ]; then
+		umount "${rootfsDir}/proc"
+	fi
+
 	# useful for systemd-nspawn --private-users=$privateUsersOffset
 	if [ "$privateUsersOffset" != 0 ]; then
 		cat "$rootfsDir"/etc/passwd | awk -F ':' '{print $3}' | sort -uh | while read -r user
@@ -165,10 +169,6 @@ EOF
 			new_GID=$((${group}+${privateUsersOffset}))
 			find "$rootfsDir" -group "$group" -exec chown "$new_GID" {} \;
 		done
-	fi
-
-	if [ "$workaroundSystemd18276" != 0 ]; then
-		umount "${rootfsDir}/proc"
 	fi
 
 	( set -x
