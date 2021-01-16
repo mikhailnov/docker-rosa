@@ -48,11 +48,15 @@ rootfsSquashBlockSize="${rootfsSquashBlockSize:-512K}"
 clean_rootfsDir="${clean_rootfsDir:-1}"
 # useful for systemd-nspawn --private-users=$privateUsersOffset
 privateUsersOffset="${privateUsersOffset:-0}"
+# Workaround https://github.com/systemd/systemd/issues/18276
+workaroundSystemd18276="${workaroundSystemd18276:-1}"
 
 _main(){
 	# Ensure that rootfsDir from previous build will not be reused
 	if [ "$clean_rootfsDir" = 1 ]; then
 		umount "${rootfsDir}/dev" || :
+		umount "${rootfsDir}/sys" || :
+		umount "${rootfsDir}/proc" || :
 		rm -fr "$rootfsDir"
 	fi
 	dnf_conf_tmp="$(mktemp)"
@@ -108,7 +112,11 @@ EOF
 					echo "Cannot convert path $rootfsDir to an absolute path!"
 			fi
 	fi
-				
+
+	if [ "$workaroundSystemd18276" != 0 ]; then
+		mkdir -p "${rootfsDir}/proc"
+		mount -t proc proc "${rootfsDir}/proc"
+	fi
 		
 	dnf --config "$dnf_conf_tmp" --releasever "$rosaVersion" --installroot "$dnf_rootfsDir" --forcearch="$arch" install ${packagesList}
 	rm -fr "${rootfsDir}/var/cache/dnf"
@@ -157,6 +165,10 @@ EOF
 			new_GID=$((${group}+${privateUsersOffset}))
 			find "$rootfsDir" -group "$group" -exec chown "$new_GID" {} \;
 		done
+	fi
+
+	if [ "$workaroundSystemd18276" != 0 ]; then
+		umount "${rootfsDir}/proc"
 	fi
 
 	( set -x
