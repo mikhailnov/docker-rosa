@@ -46,6 +46,8 @@ rootfsXzThreads="${rootfsXzThreads:-0}"
 rootfsSquashCompressAlgo="${rootfsSquashCompressAlgo:-xz}"
 rootfsSquashBlockSize="${rootfsSquashBlockSize:-512K}"
 clean_rootfsDir="${clean_rootfsDir:-1}"
+# useful for systemd-nspawn --private-users=$privateUsersOffset
+privateUsersOffset="${privateUsersOffset:-0}"
 
 _main(){
 	# Ensure that rootfsDir from previous build will not be reused
@@ -141,6 +143,20 @@ EOF
 	# pam_securetty was removed by default in PAM in rosa2019.1
 	if grep -q 'pam_securetty.so' "${rootfsDir}/etc/pam.d/login"; then
 		sed -e '/pam_securetty.so/d' -i "${rootfsDir}/etc/pam.d/login"
+	fi
+
+	# useful for systemd-nspawn --private-users=$privateUsersOffset
+	if [ "$privateUsersOffset" != 0 ]; then
+		cat "$rootfsDir"/etc/passwd | awk -F ':' '{print $3}' | sort -uh | while read -r user
+		do
+			new_UID=$((${user}+${privateUsersOffset}))
+			find "$rootfsDir" -user "$user" -exec chown "$new_UID" {} \;
+		done
+		cat "$rootfsDir"/etc/group | awk -F ':' '{print $3}' | sort -uh | while read -r group
+		do
+			new_GID=$((${group}+${privateUsersOffset}))
+			find "$rootfsDir" -group "$group" -exec chown "$new_GID" {} \;
+		done
 	fi
 
 	( set -x
