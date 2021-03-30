@@ -50,6 +50,21 @@ clean_rootfsDir="${clean_rootfsDir:-1}"
 privateUsersOffset="${privateUsersOffset:-0}"
 # Workaround https://github.com/systemd/systemd/issues/18276
 workaroundSystemd18276="${workaroundSystemd18276:-1}"
+# Source custom script, e.g. to tweak configs etc. when packing
+# a rootfs for a specific usesace, e.g. container with webserver
+customScriptPrePack="${customScriptPrePack:-}"
+
+dnf_conf_tmp="$(mktemp)"
+trap 'rm -f "$dnf_conf_tmp"' EXIT
+
+_dnf(){
+	dnf \
+		--config "$dnf_conf_tmp" \
+		--releasever "$rosaVersion" \
+		--installroot "$dnf_rootfsDir" \
+		--forcearch="$arch" \
+		$*
+}
 
 _main(){
 	# Ensure that rootfsDir from previous build will not be reused
@@ -59,7 +74,6 @@ _main(){
 		umount "${rootfsDir}/proc" || :
 		rm -fr "$rootfsDir"
 	fi
-	dnf_conf_tmp="$(mktemp)"
 	cat << EOF > "$dnf_conf_tmp"
 [main]
 keepcache=0
@@ -118,7 +132,7 @@ EOF
 		mount -t proc proc "${rootfsDir}/proc"
 	fi
 		
-	dnf --config "$dnf_conf_tmp" --releasever "$rosaVersion" --installroot "$dnf_rootfsDir" --forcearch="$arch" install ${packagesList}
+	_dnf install ${packagesList}
 	rm -fr "${rootfsDir}/var/cache/dnf"
 	# allow to exclude bash from list of packages
 	if [ -x "${rootfsDir}/bin/bash" ]; then
@@ -171,6 +185,10 @@ EOF
 		done
 	fi
 
+	if [ -n "$customScriptPrePack" ]; then
+		. "$customScriptPrePack"
+	fi
+
 	( set -x
 	if [ "$rootfsPackTarball" != 0 ]; then
 		env XZ_OPT="-${rootfsXzCompressLevel} --threads=${rootfsXzThreads} -v" \
@@ -185,5 +203,4 @@ EOF
 	)
 }
 
-trap 'rm -f "$dnf_conf_tmp"' EXIT
 _main
