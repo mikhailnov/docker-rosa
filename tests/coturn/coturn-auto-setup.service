@@ -1,0 +1,13 @@
+[Unit]
+Description=Coturn fisrt boot wizard
+Wants=network-online.target
+After=network-online.target
+ConditionPathExists=/var/lib/coturn/.notinited
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/coturn-auto-setup
+
+[Install]
+WantedBy=multi-user.target
