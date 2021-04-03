@@ -53,6 +53,7 @@ workaroundSystemd18276="${workaroundSystemd18276:-1}"
 # Source custom script, e.g. to tweak configs etc. when packing
 # a rootfs for a specific usesace, e.g. container with webserver
 customScriptPrePack="${customScriptPrePack:-}"
+nproc="${nproc:-$(nproc)}"
 
 dnf_conf_tmp="$(mktemp)"
 trap 'rm -f "$dnf_conf_tmp"' EXIT
@@ -173,15 +174,18 @@ EOF
 
 	# useful for systemd-nspawn --private-users=$privateUsersOffset
 	if [ "$privateUsersOffset" != 0 ]; then
+		# such ownership of the root directory is needed to not confuse mksquashfs
+		chown "${privateUsersOffset}:${privateUsersOffset}" "$rootfsDir"
 		cat "$rootfsDir"/etc/passwd | awk -F ':' '{print $3}' | sort -uh | while read -r user
 		do
 			new_UID=$((${user}+${privateUsersOffset}))
-			find "$rootfsDir" -user "$user" -exec chown "$new_UID" {} \;
+			# some symlinks are broken, do not fail on this
+			find "$rootfsDir" -user "$user" | xargs -I'{}' -P"$nproc" chown "$new_UID" '{}' || :
 		done
 		cat "$rootfsDir"/etc/group | awk -F ':' '{print $3}' | sort -uh | while read -r group
 		do
 			new_GID=$((${group}+${privateUsersOffset}))
-			find "$rootfsDir" -group "$group" -exec chown "$new_GID" {} \;
+			find "$rootfsDir" -group "$group" | xargs -I'{}' -P"$nproc" chgrp "$new_GID" '{}' || :
 		done
 	fi
 
