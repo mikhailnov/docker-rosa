@@ -6,7 +6,7 @@ chroot "$rootfsDir" /bin/sh -c "systemctl disable fstrim.timer"
 
 # _dnf <...>
 
-echo "coturn1.example.tld" > "$rootfsDir"/etc/hostname
+echo "$hostname" > "$rootfsDir"/etc/hostname
 
 cat "$dir0"/turnserver.conf > "$rootfsDir"/etc/coturn/turnserver.conf
 new_auth_secret="$(libressl rand -hex 16 || openssl rand -hex 16)"
@@ -23,8 +23,6 @@ EOF
 mkdir -p "$rootfsDir"/etc/letsencrypt/renewal-hooks/deploy
 install -m0755 "$dir0"/certbot-hook.sh "$rootfsDir"/etc/letsencrypt/renewal-hooks/deploy/coturn
 
-# read in coturn-auto-setup.service
-touch "$rootfsDir"/var/lib/coturn/.notinited
 install -m0755 "$dir0"/coturn-auto-setup.sh "$rootfsDir"/usr/local/bin/coturn-auto-setup
 install -m0644 "$dir0"/coturn-auto-setup.service "$rootfsDir"/etc/systemd/system/coturn-auto-setup.service
 chroot "$rootfsDir" /bin/sh -c "systemctl enable coturn-auto-setup.service"

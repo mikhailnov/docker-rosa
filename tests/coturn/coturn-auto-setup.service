@@ -2,7 +2,7 @@
 Description=Coturn fisrt boot wizard
 Wants=network-online.target
 After=network-online.target
-ConditionPathExists=/var/lib/coturn/.notinited
+ConditionPathExists=!/var/lib/letsencrypt/.inited_coturn-auto-setup
 
 [Service]
 Type=oneshot

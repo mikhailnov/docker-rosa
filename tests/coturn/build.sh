@@ -17,6 +17,7 @@ imgType="coturn"
 customScriptPrePack="$PWD/prepack.sh"
 
 # for prepack.sh
+hostname="${hostname:-coturn1.example.tld}"
 dir0="$PWD"
 
 . ../../mkimage-dnf.sh
