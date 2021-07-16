@@ -1,5 +1,5 @@
 #!/bin/bash
-# build a container with rosa2019.1 and coturn
+# build a container with rosa2021.1 and coturn
 
 set -x
 

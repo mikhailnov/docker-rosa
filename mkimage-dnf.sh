@@ -9,7 +9,7 @@ fi
 
 arch="${arch:-x86_64}"
 imgType="${imgType:-std}"
-rosaVersion="${rosaVersion:-rosa2019.1}"
+rosaVersion="${rosaVersion:-rosa2021.1}"
 outDir="${outDir:-"."}"
 packagesList="${packagesList:-basesystem-minimal rosa-repos dnf bash systemd termcap ncurses dhcp-client locales locales-en locales-ru htop iputils iproute2 nano tar timezone passwd sudo fonts-ttf-freefont}"
 addPackages="${addPackages:-""}"
@@ -163,7 +163,7 @@ EOF
 	# disable pam_securetty to allow logging in as root via `systemd-nspawn -b`
 	# https://bugzilla.rosalinux.ru/show_bug.cgi?id=9631
 	# https://github.com/systemd/systemd/issues/852
-	# pam_securetty was removed by default in PAM in rosa2019.1
+	# pam_securetty was removed by default in PAM in rosa2021.1
 	if grep -q 'pam_securetty.so' "${rootfsDir}/etc/pam.d/login"; then
 		sed -e '/pam_securetty.so/d' -i "${rootfsDir}/etc/pam.d/login"
 	fi
