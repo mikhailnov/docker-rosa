@@ -55,6 +55,7 @@ workaroundSystemd18276="${workaroundSystemd18276:-1}"
 customScriptPrePack="${customScriptPrePack:-}"
 nproc="${nproc:-$(nproc)}"
 
+dnfConf="${dnfConf:-}"
 dnf_conf_tmp="$(mktemp)"
 trap 'rm -f "$dnf_conf_tmp"' EXIT
 
@@ -75,15 +76,16 @@ _main(){
 		umount "${rootfsDir}/proc" || :
 		rm -fr "$rootfsDir"
 	fi
-	cat << EOF > "$dnf_conf_tmp"
+	if [ -z "$dnfConf" ]
+	then
+		cat << EOF > "$dnf_conf_tmp"
 [main]
 keepcache=0
 reposdir=/dev/null
-obsoletes=1
 gpgcheck=0
 assumeyes=1
 install_weak_deps=0
-metadata_expire=60s
+metadata_expire=1h
 best=1
 
 [${rosaVersion}_main_release]
@@ -98,6 +100,9 @@ baseurl=${repo}/main/updates
 gpgcheck=0
 enabled=1
 EOF
+	else
+		cat "$dnfConf" > "$dnf_conf_tmp"
+	fi
 
 	if [ "$enableContrib" -gt 0 ]; then
 		cat << EOF >> "$dnf_conf_tmp"
