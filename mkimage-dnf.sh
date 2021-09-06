@@ -177,6 +177,10 @@ EOF
 		umount "${rootfsDir}/proc"
 	fi
 
+	if [ -n "$customScriptPrePack" ]; then
+		. "$customScriptPrePack"
+	fi
+
 	# useful for systemd-nspawn --private-users=$privateUsersOffset
 	if [ "$privateUsersOffset" != 0 ]; then
 		# such ownership of the root directory is needed to not confuse mksquashfs
@@ -192,10 +196,6 @@ EOF
 			new_GID=$((${group}+${privateUsersOffset}))
 			find "$rootfsDir" -group "$group" | xargs -I'{}' -P"$nproc" chgrp "$new_GID" '{}' || :
 		done
-	fi
-
-	if [ -n "$customScriptPrePack" ]; then
-		. "$customScriptPrePack"
 	fi
 
 	( set -x
