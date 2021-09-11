@@ -63,7 +63,7 @@ trap 'rm -f "$dnf_conf_tmp"' EXIT
 _dnf(){
 	local dnf_opts=""
 	if [ "$dnfDisableDocs" = 1 ]; then
-		dnf_opts="--setopt=tsflags=nodocs"
+		dnf_opts="--nodocs"
 	fi
 	dnf \
 		--config "$dnf_conf_tmp" \
