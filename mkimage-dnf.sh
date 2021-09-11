@@ -18,6 +18,7 @@ addPackages="${addPackages:-""}"
 brandingPackages="${brandingPackages:-distro-release}"
 if [ -n "$addPackages" ]; then packagesList="${packagesList} ${addPackages}"; fi
 if [ -n "$brandingPackages" ]; then packagesList="${packagesList} ${brandingPackages}"; fi
+dnfDisableDocs="${dnfDisableDocs:-0}"
 # auth token, example: xxx@ -> http://xxx@abf-downloads.rosalinux.ru
 repokey="${repokey:-""}"
 if [ "$rosaVersion" = "rosa2019.05" ] && [ -z "$repokey" ] ; then
@@ -60,11 +61,16 @@ dnf_conf_tmp="$(mktemp)"
 trap 'rm -f "$dnf_conf_tmp"' EXIT
 
 _dnf(){
+	local dnf_opts=""
+	if [ "$dnfDisableDocs" = 1 ]; then
+		dnf_opts="--setopt=tsflags=nodocs"
+	fi
 	dnf \
 		--config "$dnf_conf_tmp" \
 		--releasever "$rosaVersion" \
 		--installroot "$dnf_rootfsDir" \
 		--forcearch="$arch" \
+		${dnf_opts} \
 		$*
 }
 
