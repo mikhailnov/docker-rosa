@@ -147,7 +147,7 @@ EOF
 	_dnf install ${packagesList}
 	rm -fr "${rootfsDir}/var/cache/dnf"
 	# allow to exclude bash from list of packages
-	if [ -x "${rootfsDir}/bin/bash" ]; then
+	if [ -x "${rootfsDir}/bin/bash" ] && [ -x "${rootfsDir}/usr/bin/chsh" ]; then
 		chroot "$rootfsDir" /bin/sh -c "chsh --shell /bin/bash root"
 	fi
 
@@ -169,7 +169,9 @@ EOF
 	fi
 
 	# make root login without password out of the box
-	chroot "$rootfsDir" /bin/sh -c "passwd -d root"
+	if [ -x "${rootfsDir}/usr/bin/passwd" ]; then
+		chroot "$rootfsDir" /bin/sh -c "passwd -d root"
+	fi
 
 	# disable pam_securetty to allow logging in as root via `systemd-nspawn -b`
 	# https://bugzilla.rosalinux.ru/show_bug.cgi?id=9631
