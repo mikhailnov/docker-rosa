@@ -183,12 +183,12 @@ EOF
 		sed -e '/pam_securetty.so/d' -i "${rootfsDir}/etc/pam.d/login"
 	fi
 
-	if [ "$workaroundSystemd18276" != 0 ]; then
-		umount "${rootfsDir}/proc"
-	fi
-
 	if [ -n "$customScriptPrePack" ]; then
 		. "$customScriptPrePack"
+	fi
+
+	if [ "$workaroundSystemd18276" != 0 ]; then
+		umount "${rootfsDir}/proc"
 	fi
 
 	# useful for systemd-nspawn --private-users=$privateUsersOffset
