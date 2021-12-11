@@ -55,6 +55,9 @@ clean_rootfsDir="${clean_rootfsDir:-1}"
 privateUsersOffset="${privateUsersOffset:-0}"
 # Workaround https://github.com/systemd/systemd/issues/18276
 workaroundSystemd18276="${workaroundSystemd18276:-1}"
+# Source custom script to make custom changes before creating the roots,
+# e.g. pre-create a sysusers.d(5) config with needed UIDs and GIDs
+customScriptPreInstall="${customScriptPreInstall:-}"
 # Source custom script, e.g. to tweak configs etc. when packing
 # a rootfs for a specific usesace, e.g. container with webserver
 customScriptPrePack="${customScriptPrePack:-}"
@@ -153,6 +156,10 @@ EOF
 	if [ "$workaroundSystemd18276" != 0 ]; then
 		mkdir -p "${rootfsDir}/proc"
 		mount -t proc proc "${rootfsDir}/proc"
+	fi
+
+	if [ -n "$customScriptPreInstall" ]; then
+		. "$customScriptPreInstall"
 	fi
 		
 	_dnf install ${packagesList}
