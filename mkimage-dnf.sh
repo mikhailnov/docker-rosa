@@ -19,6 +19,8 @@ brandingPackages="${brandingPackages:-distro-release}"
 if [ -n "$addPackages" ]; then packagesList="${packagesList} ${addPackages}"; fi
 if [ -n "$brandingPackages" ]; then packagesList="${packagesList} ${brandingPackages}"; fi
 dnfDisableDocs="${dnfDisableDocs:-0}"
+dnfCache="${dnfCache:-0}"
+dnfCacheLocation="${dnfCacheLocation:-/var/cache/dnf-rootfs}"
 # auth token, example: xxx@ -> http://xxx@abf-downloads.rosalinux.ru
 repokey="${repokey:-""}"
 if [ "$rosaVersion" = "rosa2019.05" ] && [ -z "$repokey" ] ; then
@@ -87,19 +89,26 @@ _main(){
 		umount "${rootfsDir}/dev" || :
 		umount "${rootfsDir}/sys" || :
 		umount "${rootfsDir}/proc" || :
+		umount "${rootfsDir}/var/cache/dnf" || :
 		rm -fr "$rootfsDir"
+	fi
+	if [ "$dnfCache" = 1 ]; then
+		mkdir -p "${rootfsDir}/var/cache/dnf"
+		mkdir -p "$dnfCacheLocation"
+		mount --bind "$dnfCacheLocation" "${rootfsDir}/var/cache/dnf"
 	fi
 	if [ -z "$dnfConf" ]
 	then
 		cat << EOF > "$dnf_conf_tmp"
 [main]
-keepcache=0
 reposdir=/dev/null
 gpgcheck=0
 assumeyes=1
 install_weak_deps=0
 metadata_expire=1h
 best=1
+keepcache=${dnfCache}
+cachedir=/var/cache/dnf
 
 [${rosaVersion}_main_release]
 name=${rosaVersion}_main_release
@@ -163,7 +172,9 @@ EOF
 	fi
 		
 	_dnf install ${packagesList}
-	rm -fr "${rootfsDir}/var/cache/dnf"
+	if [ "$dnfCache" = 0 ]; then
+		rm -fr "${rootfsDir}/var/cache/dnf"
+	fi
 	# allow to exclude bash from list of packages
 	if [ -x "${rootfsDir}/bin/bash" ] && [ -x "${rootfsDir}/usr/bin/chsh" ]; then
 		chroot "$rootfsDir" /bin/sh -c "chsh --shell /bin/bash root"
@@ -207,6 +218,10 @@ EOF
 
 	if [ "$workaroundSystemd18276" != 0 ]; then
 		umount "${rootfsDir}/proc"
+	fi
+
+	if [ "$dnfCache" = 1 ]; then
+		umount "${rootfsDir}/var/cache/dnf"
 	fi
 
 	# useful for systemd-nspawn --private-users=$privateUsersOffset
