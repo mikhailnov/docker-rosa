@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Build rootfs of Fedora
 
 dnfConf="$(mktemp)"
 trap 'rm -f "$dnfConf"' EXIT
