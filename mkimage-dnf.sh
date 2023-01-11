@@ -21,6 +21,8 @@ if [ -n "$brandingPackages" ]; then packagesList="${packagesList} ${brandingPack
 dnfDisableDocs="${dnfDisableDocs:-0}"
 dnfCache="${dnfCache:-0}"
 dnfCacheLocation="${dnfCacheLocation:-/var/cache/dnf-rootfs}"
+# rpm verbosity: print what is happening during operations with packages
+rpmVerbose="${rpmVerbose:-0}"
 # auth token, example: xxx@ -> http://xxx@abf-downloads.rosalinux.ru
 repokey="${repokey:-""}"
 if [ "$rosaVersion" = "rosa2019.05" ] && [ -z "$repokey" ] ; then
@@ -73,6 +75,9 @@ _dnf(){
 	local dnf_opts=""
 	if [ "$dnfDisableDocs" = 1 ]; then
 		dnf_opts="--nodocs"
+	fi
+	if [ "$rpmVerbose" = 1 ]; then
+		dnf_opts="--setopt=rpmverbosity=debug"
 	fi
 	dnf \
 		--config "$dnf_conf_tmp" \
