@@ -33,9 +33,12 @@ mirror="${mirror:-http://${repokey}abf-downloads.rosalinux.ru}"
 repo="${repo:-${mirror}/${rosaVersion}/repository/${arch}/}"
 enableContrib="${enableContrib:-1}"
 enableTesting="${enableTesting:-0}"
+enableUpdates="${enableUpdates:-0}"
 if [ "$rosaVersion" = "rosa2019.05" ]; then
 	# There is no contrib in certified distros
 	enableContrib=0
+	# both release and updates
+	enableUpdates=1
 fi
 if [ "$enableContrib" -gt 0 ] && [[ "$packagesList" =~ .*rosa-repos.* ]] ; then
 	packagesList="${packagesList} rosa-repos-contrib"
@@ -152,6 +155,16 @@ EOF
 [${rosaVersion}_contrib_testing]
 name=${rosaVersion}_contrib_testing
 baseurl=${repo}/contrib/testing
+gpgcheck=0
+enabled=1
+EOF
+	fi
+
+	if [ "$enableUpdates" -gt 0 ]; then
+		cat << EOF >> "$dnf_conf_tmp"
+[${rosaVersion}_main_updates]
+name=${rosaVersion}_main_updates
+baseurl=${repo}/main/updates
 gpgcheck=0
 enabled=1
 EOF
