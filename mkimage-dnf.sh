@@ -57,8 +57,11 @@ rootfsSquashBlockSize="${rootfsSquashBlockSize:-512K}"
 clean_rootfsDir="${clean_rootfsDir:-1}"
 # useful for systemd-nspawn --private-users=$privateUsersOffset
 privateUsersOffset="${privateUsersOffset:-0}"
-# Workaround https://github.com/systemd/systemd/issues/18276
-workaroundSystemd18276="${workaroundSystemd18276:-1}"
+# See also: https://github.com/systemd/systemd/issues/18276
+# /dev/null is required for many scriptlets
+mountDev="${mountDev:-1}"
+# See also: https://github.com/systemd/systemd/issues/18276
+mountProc="${mountProc:-1}"
 # Source custom script to make custom changes before creating the roots,
 # e.g. pre-create a sysusers.d(5) config with needed UIDs and GIDs
 customScriptPreInstall="${customScriptPreInstall:-}"
@@ -167,7 +170,11 @@ EOF
 			fi
 	fi
 
-	if [ "$workaroundSystemd18276" != 0 ]; then
+	if [ "$mountDev" != 0 ]; then
+		mkdir -p "${rootfsDir}/dev"
+		mount -t devtmpfs devtmpfs "${rootfsDir}/dev"
+	fi
+	if [ "$mountProc" != 0 ]; then
 		mkdir -p "${rootfsDir}/proc"
 		mount -t proc proc "${rootfsDir}/proc"
 	fi
@@ -221,8 +228,12 @@ EOF
 		. "$customScriptPrePack"
 	fi
 
-	if [ "$workaroundSystemd18276" != 0 ]; then
+	if [ "$mountProc" != 0 ]; then
 		umount "${rootfsDir}/proc"
+	fi
+
+	if [ "$mountDev" != 0 ]; then
+		umount "${rootfsDir}/dev"
 	fi
 
 	if [ "$dnfCache" = 1 ]; then
