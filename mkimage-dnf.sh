@@ -40,7 +40,7 @@ fi
 if [ "$enableContrib" -gt 0 ] && [[ "$packagesList" =~ .*rosa-repos.* ]] ; then
 	packagesList="${packagesList} rosa-repos-contrib"
 fi
-if [ "$enableTesting" -gt 0 ] && [[ "$packagesList" =~ .*rosa-repos.* ]] ; then
+if [ "$enableTesting" -gt 0 ] && [ "$rosaVersion" != "rosa2019.05" ] && [[ "$packagesList" =~ .*rosa-repos.* ]] ; then
 	packagesList="${packagesList} rosa-repos-testing"
 fi
 outName="${outName:-"rootfs-${imgType}-${rosaVersion}_${arch}_$(date +%Y-%m-%d)"}"
