@@ -16,7 +16,7 @@ if ! command -v dnf 2>/dev/null >/dev/null
 		BUILD_MAIN_IMAGE_ONLY=1
 		dnf refresh
 		dnf distrosync -y
-		dnf install -y coreutils findutils sed tar util-linux squashfs-tools xz
+		dnf install -y coreutils findutils sed tar util-linux squashfs-tools xz e2fsprogs
 fi
 
 if [ "$BUILD_MAIN_IMAGE_ONLY" = 1 ]
