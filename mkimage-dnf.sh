@@ -50,9 +50,13 @@ outName="${outName:-"rootfs-${imgType}-${rosaVersion}_${arch}_$(date +%Y-%m-%d)"
 rootfsDir="${rootfsDir:-./BUILD_${outName}}"
 tarFile="${outName}.tar.xz"
 sqfsFile="${outName}.sqfs"
+ext4File="${outName}.ext4"
 systemd_networkd="${systemd_networkd:-1}"
 rootfsPackTarball="${rootfsPackTarball:-1}"
 rootfsPackSquash="${rootfsPackSquash:-0}"
+rootfsPackExt4="${rootfsPackExt4:-0}"
+rootfsExt4size="${rootfsExt4size:-2048}"
+rootfsExt4compress="${rootfsExt4compress:-1}"
 rootfsXzCompressLevel="${rootfsXzCompressLevel:-6}"
 rootfsXzThreads="${rootfsXzThreads:-0}"
 rootfsSquashCompressAlgo="${rootfsSquashCompressAlgo:-xz}"
@@ -101,6 +105,7 @@ _main(){
 		umount "${rootfsDir}/sys" || :
 		umount "${rootfsDir}/proc" || :
 		umount "${rootfsDir}/var/cache/dnf" || :
+		umount "${outDir}/BUILD_ext4" || :
 		rm -fr "$rootfsDir"
 	fi
 	if [ "$dnfCache" = 1 ]; then
@@ -278,6 +283,19 @@ EOF
 	fi
 	if [ "$rootfsPackSquash" != 0 ]; then
 		mksquashfs "$rootfsDir" "${outDir}/${sqfsFile}" -comp "$rootfsSquashCompressAlgo" -b "$rootfsSquashBlockSize"
+	fi
+	if [ "$rootfsPackExt4" != 0 ]; then
+		# based on https://github.com/google/syzkaller/blob/master/tools/create-image.sh
+		dd if=/dev/zero of="$ext4File" bs=1M seek="$rootfsExt4size" count=1
+		mkfs.ext4 "$ext4File"
+		mkdir -p "${outDir}/BUILD_ext4"
+		mount "$ext4File" "${outDir}/BUILD_ext4"
+		rsync -a "$rootfsDir"/ "${outDir}/BUILD_ext4"
+		umount "${outDir}/BUILD_ext4"
+		rmdir "${outDir}/BUILD_ext4"
+		if [ "$rootfsExt4compress" != 0 ]; then
+			xz -"${rootfsXzCompressLevel}" --threads="${rootfsXzThreads}" -v "$ext4File"
+		fi
 	fi
 
 	rm -rf "$rootfsDir"
