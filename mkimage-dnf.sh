@@ -286,15 +286,15 @@ EOF
 	fi
 	if [ "$rootfsPackExt4" != 0 ]; then
 		# based on https://github.com/google/syzkaller/blob/master/tools/create-image.sh
-		dd if=/dev/zero of="$ext4File" bs=1M seek="$rootfsExt4size" count=1
-		mkfs.ext4 "$ext4File"
+		dd if=/dev/zero of="${outDir}/${ext4File}" bs=1M seek="$rootfsExt4size" count=1
+		mkfs.ext4 "${outDir}/${ext4File}"
 		mkdir -p "${outDir}/BUILD_ext4"
-		mount "$ext4File" "${outDir}/BUILD_ext4"
+		mount "${outDir}/${ext4File}" "${outDir}/BUILD_ext4"
 		rsync -a "$rootfsDir"/ "${outDir}/BUILD_ext4"
 		umount "${outDir}/BUILD_ext4"
 		rmdir "${outDir}/BUILD_ext4"
 		if [ "$rootfsExt4compress" != 0 ]; then
-			xz -"${rootfsXzCompressLevel}" --threads="${rootfsXzThreads}" -v "$ext4File"
+			xz -f -"${rootfsXzCompressLevel}" --threads="${rootfsXzThreads}" -v "${outDir}/${ext4File}"
 		fi
 	fi
 

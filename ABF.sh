@@ -16,7 +16,17 @@ if ! command -v dnf 2>/dev/null >/dev/null
 		BUILD_MAIN_IMAGE_ONLY=1
 		dnf refresh
 		dnf distrosync -y
-		dnf install -y coreutils findutils sed tar util-linux squashfs-tools xz e2fsprogs
+		dnf install -y coreutils findutils sed tar util-linux squashfs-tools xz e2fsprogs rsync /usr/bin/ssh-keygen
+fi
+
+if [ "${BUILD_SYZKALLER:-0}" = 1 ]; then
+	cd examples/syzkaller
+	export rootfsPackTarball=0
+	export rootfsPackSquash=0
+	export rootfsPackExt4=1
+	export rootfsExt4compress=1
+	./build.sh
+	exit $?
 fi
 
 if [ "$BUILD_MAIN_IMAGE_ONLY" = 1 ]
