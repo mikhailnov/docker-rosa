@@ -3,7 +3,6 @@
 
 set -x
 
-arch="x86_64"
 addPackages+=" task-kernel"
 addPackages+=" openssh-server"
 addPackages+=" curl"

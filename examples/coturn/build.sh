@@ -3,7 +3,6 @@
 
 set -x
 
-arch="x86_64"
 # let's give 100 000 users to one container,
 # the next container must start with 1200000
 privateUsersOffset="1100000"
