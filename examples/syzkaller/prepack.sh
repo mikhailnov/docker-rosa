@@ -26,5 +26,4 @@ ssh-keygen -f "$outDir"/sshkey -q -N ""
 ( umask 077 && mkdir -p "$rootfsDir"/root/.ssh )
 cat "$outDir"/sshkey.pub > "$rootfsDir"/root/.ssh/authorized_keys
 
-# SYZFATAL: failed to listen on localhost:22: listen tcp 127.0.0.1:22: bind: permission denied
-echo 'Port 5252' > "$rootfsDir"/etc/ssh/sshd_config.d/port
+echo 'Port 22' > "$rootfsDir"/etc/ssh/sshd_config.d/port
