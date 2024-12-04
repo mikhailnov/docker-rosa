@@ -46,6 +46,7 @@ fi
 if [ "$enableTesting" -gt 0 ] && [ "$rosaVersion" != "rosa2019.05" ] && [[ "$packagesList" =~ .*rosa-repos.* ]] ; then
 	packagesList="${packagesList} rosa-repos-testing"
 fi
+addRepos="${addRepos:-}"
 outName="${outName:-"rootfs-${imgType}-${rosaVersion}_${arch}_$(date +%Y-%m-%d)"}"
 rootfsDir="${rootfsDir:-./BUILD_${outName}}"
 tarFile="${outName}.tar.xz"
@@ -173,6 +174,20 @@ baseurl=${repo}/main/updates
 gpgcheck=0
 enabled=1
 EOF
+	fi
+
+	if [ -n "$addRepos" ]; then
+		for url in $addRepos
+		do
+			md5="$(echo "$url" | rev | md5sum | head -c6)"
+			cat << EOF >> "$dnf_conf_tmp"
+[${md5}]
+name=${md5}
+baseurl=${url}
+gpgcheck=0
+enabled=1
+EOF
+		done
 	fi
 
 	mkdir -p "$rootfsDir"
